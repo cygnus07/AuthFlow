@@ -4,11 +4,13 @@ import { config } from '@/config/environment';
 import { logger } from '@/utils/logger';
 
 // Create reusable transporter object using SMTP transport
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: config.EMAIL_SERVICE || 'gmail',
   host: config.EMAIL_HOST,
-  port: parseInt(config.EMAIL_PORT || '587'),
-  secure: config.EMAIL_SECURE === 'true', // true for 465, false for other ports
+  port: typeof config.EMAIL_PORT === 'number'
+    ? config.EMAIL_PORT
+    : parseInt(config.EMAIL_PORT || '587', 10),
+  secure: config.EMAIL_SECURE , // true for 465, false for other ports
   auth: {
     user: config.EMAIL_USER,
     pass: config.EMAIL_PASS,

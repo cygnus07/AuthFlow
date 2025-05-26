@@ -35,6 +35,26 @@ const envSchema = z.object({
   
   // External APIs
   API_BASE_URL: z.string().url().optional(),
+
+  // Email configuration
+  EMAIL_HOST: z.string().default('smtp.gmail.com'),
+  EMAIL_PORT: z.string().transform(Number).default('587'),
+  EMAIL_USER: z.string().email(),
+  EMAIL_PASS: z.string(),
+  EMAIL_FROM: z.string().email(),
+  EMAIL_SECURE: z.string().transform(val => val === 'true').default('false'),
+  EMAIL_SERVICE: z.string().optional(),
+
+  // OAuth Providers
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  FACEBOOK_APP_ID: z.string().optional(),
+  FACEBOOK_APP_SECRET: z.string().optional(),
+
+  // Application
+  APP_NAME: z.string().default('My App'),
+  CLIENT_URL: z.string().url().optional(),
+  CONTACT_EMAIL: z.string().email().optional()
 });
 
 type Config = z.infer<typeof envSchema>;
