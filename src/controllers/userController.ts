@@ -3,13 +3,13 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
-import { emailService } from '../services/emailService.js';
-import User from '../models/userModel.js';
-import { config } from '../config/environment.js';
-import { AppError, asyncHandler } from '../middleware/errorHandler.js';
-import BlacklistedToken from '../models/blacklistedTokenModel.js';
-import { AuthenticatedRequest } from '../types/userTypes.js';
-import { UserRole, AccountStatus } from '../types/userTypes.js';
+import { emailService } from '../services/emailService';
+import User from '../models/userModel';
+import { config } from '../config/environment';
+import { AppError, asyncHandler } from '../middleware/errorHandler';
+import BlacklistedToken from '../models/blacklistedTokenModel';
+import { AuthenticatedRequest } from '../types/userTypes';
+import { UserRole, AccountStatus } from '../types/userTypes';
 
 import {
   RegisterInput,
@@ -18,7 +18,7 @@ import {
   UpdateProfileInput,
   ChangePasswordInput,
   AdminUpdateUserInput
-} from '../validators/userValidator.js';
+} from '../validators/userValidator';
 // Helper function to generate OTP
 const generateOTP = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();

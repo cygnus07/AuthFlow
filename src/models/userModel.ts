@@ -1,4 +1,4 @@
-import mongoose, { Schema, model } from 'mongoose';
+import  { Schema, model } from 'mongoose';
 import { UserDocument, UserRole, AccountStatus } from '../types/userTypes';
 
 // Address schema (optional - can be removed if not needed)

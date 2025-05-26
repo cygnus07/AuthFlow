@@ -111,7 +111,7 @@ router.get('/ready', asyncHandler(async (_req: Request, res: Response) => {
 }));
 
 // Liveness probe (for Kubernetes)
-router.get('/live', (_req: Request, res: Response) => {
+router.get('/live', (_req, res: Response) => {
   res.status(200).json({ status: 'alive' });
 });
 

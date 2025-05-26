@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { userController } from '../controllers/userController.js';
-import { authenticate, authorize, withAuth } from '../middleware/authMiddleware.js';
-import { validate } from '../middleware/validationMiddleware.js';
-import { asyncHandler } from '../middleware/errorHandler.js';
+import { userController } from '../controllers/userController';
+import { authenticate, authorize } from '../middleware/authMiddleware';
+import { validate } from '../middleware/validationMiddleware';
+import { asyncHandler } from '../middleware/errorHandler';
 import {
   registerSchema,
   loginSchema,
@@ -14,7 +14,7 @@ import {
   resendVerificationSchema,
   forgotPasswordSchema,
   resetPasswordSchema
-} from '../validators/userValidator.js';
+} from '../validators/userValidator';
 
 const router = Router();
 
@@ -43,7 +43,7 @@ router.put('/change-password', validate(changePasswordSchema), userController.ch
 router.post('/logout', userController.logout);
 
 // Admin-only routes
-router.use(authorize('admin'));
+router.use(authorize('admin') as any);
 router.get('/', userController.getAllUsers);
 router.get('/:id', userController.getUserById);
 router.put('/:id', validate(adminUpdateUserSchema), userController.updateUser);

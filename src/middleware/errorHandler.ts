@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Request, Response, NextFunction, RequestHandler, ErrorRequestHandler } from 'express';
 import { config } from '@/config/environment';
 
 export interface ApiError extends Error {
@@ -23,12 +23,12 @@ export const createError = (message: string, statusCode: number = 500): AppError
   return new AppError(message, statusCode);
 };
 
-export const errorHandler = (
-  error: ApiError,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-): void => {
+export const errorHandler : ErrorRequestHandler = (
+  error,
+  req,
+  res,
+  _next,
+) => {
   let { statusCode = 500, message } = error;
 
   // Handle specific error types

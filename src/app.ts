@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, RequestHandler, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -63,10 +63,10 @@ class App {
     if (config.NODE_ENV !== 'test') {
       this.app.use(morgan('combined'));
     }
-    this.app.use(requestLogger);
+    this.app.use(requestLogger as RequestHandler);
 
     // Health check middleware
-    this.app.use('/health', (_req: Request, res: Response) => {
+    this.app.use('/health', (_req, res) => {
       res.status(200).json({
         status: 'OK',
         timestamp: new Date().toISOString(),
@@ -78,7 +78,7 @@ class App {
 
   private initializeRoutes(): void {
     // Root route
-    this.app.get('/', (_req: Request, res: Response) => {
+    this.app.get('/', (_req ,res: Response) => {
       res.status(200).json({
         status: 'API running',
         message: 'Welcome to the Node.js TypeScript Express API',
@@ -93,7 +93,7 @@ class App {
 
   private initializeErrorHandling(): void {
     // 404 handler
-    this.app.use(notFoundHandler);
+    this.app.use(notFoundHandler as RequestHandler);
     
     // Global error handler
     this.app.use(errorHandler);

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
-import { config } from '../config/environment.js';
-import { ErrorCodes } from '../utils/apiResponse.js'
-import User from '../models/userModel.js'
-import { logger } from '../utils/logger.js';
-import BlacklistedToken from '../models/blacklistedTokenModel.js'
-import { AuthenticatedRequest, AuthUser } from '../types/userTypes.js';
+import { config } from '../config/environment';
+import { ErrorCodes } from '../utils/apiResponse'
+import User from '../models/userModel'
+import { logger } from '../utils/logger';
+import BlacklistedToken from '../models/blacklistedTokenModel'
+import { AuthenticatedRequest, AuthUser } from '../types/userTypes';
 
 
 // Add a proper type declaration to extend Express.Request

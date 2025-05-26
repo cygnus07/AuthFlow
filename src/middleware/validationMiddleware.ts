@@ -1,6 +1,6 @@
 import {  RequestHandler } from 'express';
 import { z, ZodError } from 'zod';
-import { ErrorCodes } from '../utils/apiResponse.js';
+import { ErrorCodes } from '../utils/apiResponse';
 
 declare global {
   namespace Express {

@@ -1,8 +1,8 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy, Profile as GoogleProfile, StrategyOptions } from 'passport-google-oauth20';
-import User from '../models/userModel.js';
-import { config } from '../config/environment.js';
-import { logger } from '../utils/logger.js';
+import User from '../models/userModel';
+import { config } from '../config/environment';
+import { logger } from '../utils/logger';
 import crypto from 'crypto';
 // import { IUser } from '../types/userTypes.js';
 // import { HydratedDocument } from 'mongoose';
