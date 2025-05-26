@@ -4,75 +4,57 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import passport from 'passport';
 import { emailService } from '../services/emailService.js';
-import User from '../models/User.model.js';
+import User from '../models/userModel.js';
 import { config } from '../config/environment.js';
 import { AppError, asyncHandler } from '../middleware/errorHandler.js';
-import BlacklistedToken from '../models/BlacklistedToken.model.js';
+import BlacklistedToken from '../models/blacklistedTokenModel.js';
 import { AuthenticatedRequest } from '../types/userTypes.js';
 import { UserRole, AccountStatus } from '../types/userTypes.js';
 
-// Input validation interfaces (you'll need to create these in validators)
-interface RegisterInput {
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  email: string;
-  password: string;
-  role?: UserRole;
-}
-
-interface LoginInput {
-  email: string;
-  password: string;
-}
-
-interface RefreshTokenInput {
-  refreshToken: string;
-}
-
-interface UpdateProfileInput {
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  email?: string;
-  phone?: string;
-}
-
-interface ChangePasswordInput {
-  currentPassword: string;
-  newPassword: string;
-}
-
-interface AdminUpdateUserInput {
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  email?: string;
-  role?: UserRole;
-  status?: AccountStatus;
-}
-
+import {
+  RegisterInput,
+  LoginInput,
+  RefreshTokenInput,
+  UpdateProfileInput,
+  ChangePasswordInput,
+  AdminUpdateUserInput
+} from '../validators/userValidator.js';
 // Helper function to generate OTP
 const generateOTP = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 // Helper function to generate JWT tokens
+// Helper function to generate JWT tokens
 const generateTokens = (userId: string) => {
-  const token = jwt.sign(
-    { userId },
-    config.JWT_SECRET,
-    { expiresIn: config.JWT_EXPIRATION }
-  );
-  
-  const refreshToken = jwt.sign(
-    { userId },
-    config.JWT_REFRESH_SECRET,
-    { expiresIn: config.JWT_REFRESH_EXPIRATION }
-  );
-  
+  if (!config.JWT_SECRET || !config.JWT_REFRESH_SECRET) {
+    throw new Error("JWT secrets are not defined in config");
+  }
+
+  // Ensure the secrets are strings
+  const jwtSecret = config.JWT_SECRET as string;
+  const refreshSecret = config.JWT_REFRESH_SECRET as string;
+
+// ...existing code...
+const tokenOptions: jwt.SignOptions = { expiresIn: Number(config.JWT_EXPIRES_IN) };
+const refreshOptions: jwt.SignOptions = { expiresIn: Number(config.JWT_REFRESH_EXPIRES_IN) };
+// ...existing code...
+
+const token = jwt.sign(
+  { userId },
+  jwtSecret,
+  tokenOptions
+);
+
+const refreshToken = jwt.sign(
+  { userId },
+  refreshSecret,
+  refreshOptions
+);
+
   return { token, refreshToken };
 };
+
 
 // Helper function to create user response (removes sensitive fields)
 const createUserResponse = (user: any) => {
@@ -255,6 +237,11 @@ export const userController = {
       throw new AppError('Account is suspended or inactive', 403);
     }
 
+    if (!user.password) {
+  throw new Error('Password not set for this user');
+}
+
+
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -301,12 +288,17 @@ export const userController = {
     // Verify refresh token
     const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET) as { userId: string };
 
+    if (!config.JWT_SECRET) {
+  throw new Error('JWT_SECRET is not defined');
+}
+
+
     // Generate new access token
-    const token = jwt.sign(
-      { userId: decoded.userId },
-      config.JWT_SECRET,
-      { expiresIn: config.JWT_EXPIRATION }
-    );
+const token = jwt.sign(
+  { userId: decoded.userId },
+  config.JWT_SECRET as string, // Explicitly cast to string
+  { expiresIn: config.JWT_EXPIRES_IN } as jwt.SignOptions // Explicitly type options
+);
 
     res.json({
       success: true,
@@ -327,10 +319,11 @@ export const userController = {
 
     // Don't reveal if user exists for security
     if (!user) {
-      return res.json({
+       res.json({
         success: true,
         message: 'If a user with that email exists, a password reset link has been sent'
       });
+      return;
     }
 
     // Generate reset token
@@ -359,8 +352,8 @@ export const userController = {
       });
     } catch (error) {
       // Clean up reset token if email fails
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
+      user.passwordResetToken = undefined as any
+      user.passwordResetExpires = undefined as any
       await user.save();
       
       throw new AppError('Failed to send password reset email', 500);
@@ -397,8 +390,8 @@ export const userController = {
 
     // Update password
     user.password = await bcrypt.hash(password, 12);
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
+    user.passwordResetToken = undefined as any;
+    user.passwordResetExpires = undefined as any
     user.passwordChangedAt = new Date();
     await user.save();
 
@@ -500,6 +493,11 @@ export const userController = {
       throw new AppError('User not found', 404);
     }
 
+    if (!user.password) {
+  throw new Error('Password not set for this user');
+}
+
+
     // Check current password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isPasswordValid) {
@@ -529,8 +527,8 @@ export const userController = {
 
   // Admin: Get all users
   getAllUsers: asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    const page = parseInt(req.query['page'] as string) || 1;
+    const limit = parseInt(req.query['limit'] as string) || 10;
     const skip = (page - 1) * limit;
 
     const users = await User.find()
@@ -557,7 +555,7 @@ export const userController = {
 
   // Admin: Get user by ID
   getUserById: asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const userId = req.params.id;
+    const userId = req.params['id'];
 
     const user = await User.findById(userId);
 
@@ -576,7 +574,7 @@ export const userController = {
 
   // Admin: Update user
   updateUser: asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const userId = req.params.id;
+    const userId = req.params['id'];
     const { firstName, lastName, username, email, role, status } = req.body as AdminUpdateUserInput;
 
     // Check if email or username is already in use
@@ -617,7 +615,7 @@ export const userController = {
 
   // Admin: Delete user
   deleteUser: asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const userId = req.params.id;
+    const userId = req.params['id'];
 
     const user = await User.findByIdAndDelete(userId);
 

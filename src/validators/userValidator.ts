@@ -55,7 +55,7 @@ export const registerSchema = baseUserSchema.extend({
 });
 
 export const loginSchema = z.object({
-  emailOrUsername: z.string().min(1, 'Email or username is required'),
+  email: emailSchema,
   password: z.string().min(1, 'Password is required')
 });
 
@@ -65,6 +65,7 @@ export const refreshTokenSchema = z.object({
 
 // Profile schemas
 export const updateProfileSchema = baseUserSchema.extend({
+  phone: phoneSchema.optional(),
   preferences: z.record(z.any()).optional(),
 }).partial().refine(data => Object.keys(data).length > 0, {
   message: 'At least one field must be provided'
@@ -132,3 +133,44 @@ export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type OAuthCallbackInput = z.infer<typeof oAuthCallbackSchema>;
+
+// Additional type interfaces for request validation
+export interface RegisterRequest {
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email: string;
+  password: string;
+  role?: UserRole;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface AdminUpdateUserRequest {
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+  role?: UserRole;
+  status?: AccountStatus;
+}

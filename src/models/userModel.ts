@@ -137,6 +137,6 @@ userSchema.set('toJSON', {
   virtuals: true
 });
 
-const User = mongoose.models['User'] || model<UserDocument>('User', userSchema);
+const User = model<UserDocument>('User', userSchema);
 
 export default User;

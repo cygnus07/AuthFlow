@@ -20,7 +20,9 @@ const envSchema = z.object({
   DATABASE_URL: z.string().optional(),
   
   // Security
-  JWT_SECRET: z.string().optional(),
+  JWT_SECRET: z.string(),
+  JWT_REFRESH_SECRET: z.string(),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   JWT_EXPIRES_IN: z.string().default('24h'),
   BCRYPT_ROUNDS: z.string().transform(Number).default('12'),
   
