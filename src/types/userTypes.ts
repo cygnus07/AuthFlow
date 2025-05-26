@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { Types } from 'mongoose';
+import { Types, Document } from 'mongoose';
 
 export enum UserRole {
   USER = 'user',          // Basic user role
@@ -114,4 +114,18 @@ export interface UserUpdateData {
 export interface PasswordResetData {
   token: string;
   newPassword: string;
+}
+
+
+export interface IUser extends Document {
+  _id: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  googleId?: string;
+  facebookId?: string;
+  emailVerified: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -431,6 +431,9 @@ const token = jwt.sign(
   // Update user profile
   updateProfile: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { firstName, lastName, username, email, phone } = req.body as UpdateProfileInput;
+    if (!req.user) {
+      throw new AppError('User not found', 404);
+    }
     const userId = req.user._id;
 
     // Check if email or username is being changed and already exists
@@ -481,6 +484,10 @@ const token = jwt.sign(
   // Change password
   changePassword: asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const { currentPassword, newPassword } = req.body as ChangePasswordInput;
+
+    if (!req.user) {
+      throw new AppError('User not found', 404);
+    }
     const userId = req.user._id;
 
     if (currentPassword === newPassword) {
@@ -653,35 +660,36 @@ const token = jwt.sign(
   }),
 
   // Google Authentication
-  googleAuth: (req: Request, res: Response, next: any) => {
-    passport.authenticate('google', {
-      scope: ['profile', 'email']
-    })(req, res, next);
-  },
+   googleAuth: passport.authenticate('google', { scope: ['profile', 'email'] }),
 
-  googleCallback: (req: Request, res: Response, next: any) => {
-    passport.authenticate('google', { session: false }, async (err: Error, user: any) => {
+  googleCallback : asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  await new Promise<void>((resolve, reject) => {
+    passport.authenticate('google', { session: false }, async (err: Error | null, user: any) => {
       if (err) {
         console.error('Google auth callback error:', err);
-        return res.redirect(`${config.CLIENT_URL}/login?error=Google authentication failed`);
+        res.redirect(`${config.CLIENT_URL}/login?error=Google authentication failed`);
+        return reject(err);
       }
 
       if (!user) {
-        return res.redirect(`${config.CLIENT_URL}/login?error=Could not authenticate with Google`);
+        res.redirect(`${config.CLIENT_URL}/login?error=Could not authenticate with Google`);
+        return reject(new Error('No user from Google authentication'));
       }
 
       try {
-        // Generate JWT tokens
-        const { token, refreshToken } = generateTokens(user._id.toString());
+        const userId = typeof user._id === 'string' ? user._id : user._id.toString();
+        const { token, refreshToken } = generateTokens(userId);
 
-        // Redirect to frontend with tokens
-        return res.redirect(
-          `${config.CLIENT_URL}/social-auth-success?token=${token}&refreshToken=${refreshToken}`
+        res.redirect(
+          `${config.CLIENT_URL}/social-auth-success?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}`
         );
+        resolve();
       } catch (error) {
         console.error('Failed to generate tokens:', error);
-        return res.redirect(`${config.CLIENT_URL}/login?error=Authentication successful but token generation failed`);
+        res.redirect(`${config.CLIENT_URL}/login?error=Authentication successful but token generation failed`);
+        resolve();
       }
     })(req, res, next);
-  }
+  });
+})
 };
