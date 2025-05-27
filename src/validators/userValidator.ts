@@ -36,7 +36,7 @@ const addressSchema = z.object({
 // Base user schema
 const baseUserSchema = z.object({
   firstName: z.string().trim().min(2, 'First name must be at least 2 characters').optional(),
-  lastName: z.string().trim().min(2, 'Last name must be at least 2 characters').optional(),
+  lastName: z.string().trim().min(2, 'Last name must be at least 2 characters'),
   username: usernameSchema.optional(),
   email: emailSchema,
   phone: phoneSchema.optional(),

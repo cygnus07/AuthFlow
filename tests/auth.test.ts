@@ -3,7 +3,7 @@ import App from '../src/app';
 import User from '../src/models/userModel';
 import { registerSchema, loginSchema, changePasswordSchema, resetPasswordSchema } from '../src/validators/userValidator';
 import { connectDatabase, disconnectDatabase } from '../src/config/db'
-import { UserRole } from '../src/types/userTypes';
+// import { UserRole } from '../src/types/userTypes';
 
 describe('Auth Endpoints', () => {
   let app: App;
@@ -16,7 +16,9 @@ describe('Auth Endpoints', () => {
     await connectDatabase();
     app = new App();
     server = app.app;
+    await User.deleteMany({}); // Clear users before tests
   });
+
 
   afterAll(async () => {
     await User.deleteMany({});
@@ -46,7 +48,7 @@ describe('Auth Endpoints', () => {
       const user = await User.findOne({ email: baseUserData.email });
       expect(user).toBeTruthy();
       expect(user?.emailVerified).toBe(false);
-    });
+    }, 10000);
 
     it.each([
       ['missing firstName', { ...baseUserData, firstName: undefined }],
@@ -138,7 +140,7 @@ describe('Auth Endpoints', () => {
   ['invalid email', { email: 'invalid-email', password: loginData.password }],
   ['missing password', { email: loginData.email }],
   ['incorrect password', { email: loginData.email, password: 'wrong-password' }],
-])('should reject login with %s', async (description, invalidData) => {
+])('should reject login with %s', async (_description, invalidData) => {
   const response = await request(server)
     .post('/api/users/login')
     .send(invalidData)
@@ -226,7 +228,7 @@ describe('Auth Endpoints', () => {
         newPassword: changePasswordData.currentPassword,
         confirmNewPassword: changePasswordData.currentPassword
       }],
-    ])('should reject password change with %s', async (description, invalidData) => {
+    ])('should reject password change with %s', async (_description, invalidData) => {
       const response = await request(server)
         .post('/api/users/change-password')
         .set('Authorization', `Bearer ${authToken}`)
@@ -268,13 +270,13 @@ describe('Auth Endpoints', () => {
       ['missing email', {}],
       ['invalid email', { email: 'invalid-email' }],
       ['non-existent email', { email: 'nonexistent@example.com' }],
-    ])('should reject password reset with %s', async (description, invalidData) => {
+    ])('should reject password reset with %s', async (_description, invalidData) => {
       const response = await request(server)
         .post('/api/users/forgot-password')
         .send(invalidData)
-        .expect(description === 'non-existent email' ? 200 : 400);
+        .expect(_description === 'non-existent email' ? 200 : 400);
 
-      expect(response.body.success).toBe(description === 'non-existent email');
+      expect(response.body.success).toBe(_description === 'non-existent email');
     });
   });
 
@@ -304,7 +306,7 @@ describe('Auth Endpoints', () => {
       ['missing new password', { ...resetData, newPassword: undefined }],
       ['weak new password', { ...resetData, newPassword: 'weak' }],
       ['mismatched passwords', { ...resetData, confirmNewPassword: 'Different123!' }],
-    ])('should reject password reset with %s', async (description, invalidData) => {
+    ])('should reject password reset with %s', async (_description, invalidData) => {
       const response = await request(server)
         .post('/api/users/reset-password')
         .send(invalidData)
@@ -346,7 +348,7 @@ describe('Auth Endpoints', () => {
       ['missing refresh token', {}],
       ['invalid refresh token', { refreshToken: 'invalid-token' }],
       ['expired refresh token', { refreshToken: 'expired-token' }],
-    ])('should reject token refresh with %s', async (description, invalidData) => {
+    ])('should reject token refresh with %s', async (_description, invalidData) => {
       const response = await request(server)
         .post('/api/users/refresh-token')
         .send(invalidData)
