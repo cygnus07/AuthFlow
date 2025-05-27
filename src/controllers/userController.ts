@@ -7,7 +7,7 @@ import { emailService } from '../services/emailService';
 import User from '../models/userModel';
 import { config } from '../config/environment';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
-import { sendSuccess, sendError, ErrorCodes } from '../utils/responseHelper';
+import { sendSuccess, sendError, ErrorCodes } from '../utils/apiResponse'
 import { logger } from '../utils/logger';
 import BlacklistedToken from '../models/blacklistedTokenModel';
 import { AuthenticatedRequest } from '../types/userTypes';
@@ -37,18 +37,26 @@ const generateTokens = (userId: string): { token: string; refreshToken: string }
   const jwtSecret = config.JWT_SECRET as string;
   const refreshSecret = config.JWT_REFRESH_SECRET as string;
 
+   const tokenOptions: jwt.SignOptions = { 
+    expiresIn: config.JWT_EXPIRES_IN as any
+  };
+  
+  const refreshOptions: jwt.SignOptions = { 
+    expiresIn: config.JWT_REFRESH_EXPIRES_IN as any
+  };
+
   try {
     const token = jwt.sign(
-      { userId },
-      jwtSecret,
-      { expiresIn: config.JWT_EXPIRES_IN as string }
-    );
+    { userId },
+    jwtSecret,
+    tokenOptions
+  );
 
-    const refreshToken = jwt.sign(
-      { userId },
-      refreshSecret,
-      { expiresIn: config.JWT_REFRESH_EXPIRES_IN as string }
-    );
+  const refreshToken = jwt.sign(
+    { userId },
+    refreshSecret,
+    refreshOptions
+  );
 
     logger.debug('Tokens generated successfully', { userId });
     return { token, refreshToken };
@@ -101,7 +109,8 @@ export const userController = {
       const passwordValidation = validatePasswordStrength(password);
       if (!passwordValidation.isValid) {
         logger.auth('registration_failed', undefined, email, false, new Error(passwordValidation.message));
-        return sendError(res, passwordValidation.message!, ErrorCodes.BAD_REQUEST, 'WEAK_PASSWORD');
+        sendError(res, passwordValidation.message!, ErrorCodes.BAD_REQUEST, 'WEAK_PASSWORD');
+        return
       }
 
       // Check if user already exists
@@ -123,7 +132,8 @@ export const userController = {
         logger.auth('registration_failed', undefined, email, false, new Error(`${conflictField} conflict`));
         logger.security('duplicate_registration_attempt', req.ip, req.get('User-Agent'), { email, username, conflictField });
         
-        return sendError(res, conflictMessage, ErrorCodes.CONFLICT, 'DUPLICATE_FIELD');
+         sendError(res, conflictMessage, ErrorCodes.CONFLICT, 'DUPLICATE_FIELD');
+         return
       }
 
       // Generate OTP for email verification
@@ -187,7 +197,8 @@ export const userController = {
 
     if (!email || !otp) {
       logger.auth('email_verification_failed', undefined, email, false, new Error('Missing email or OTP'));
-      return sendError(res, 'Email and OTP are required', ErrorCodes.BAD_REQUEST, 'MISSING_FIELDS');
+       sendError(res, 'Email and OTP are required', ErrorCodes.BAD_REQUEST, 'MISSING_FIELDS');
+      return
     }
 
     logger.info('Email verification attempt', { email, ip: req.ip });
@@ -223,7 +234,8 @@ export const userController = {
       if (!user) {
         logger.auth('email_verification_failed', undefined, email, false, new Error('Invalid or expired code'));
         logger.security('invalid_verification_attempt', req.ip, req.get('User-Agent'), { email, otp: otp.substring(0, 2) + '****' });
-        return sendError(res, 'Invalid, expired, or already verified code', ErrorCodes.BAD_REQUEST, 'INVALID_VERIFICATION_CODE');
+        sendError(res, 'Invalid, expired, or already verified code', ErrorCodes.BAD_REQUEST, 'INVALID_VERIFICATION_CODE');
+        return
       }
 
       // Generate tokens
@@ -259,7 +271,8 @@ export const userController = {
     const { email } = req.body;
 
     if (!email) {
-      return sendError(res, 'Email is required', ErrorCodes.BAD_REQUEST, 'MISSING_EMAIL');
+       sendError(res, 'Email is required', ErrorCodes.BAD_REQUEST, 'MISSING_EMAIL');
+      return
     }
 
     logger.info('Resend verification email request', { email, ip: req.ip });
@@ -267,7 +280,8 @@ export const userController = {
     const user = await User.findOne({ email, emailVerified: false });
     if (!user) {
       logger.security('resend_verification_invalid_email', req.ip, req.get('User-Agent'), { email });
-      return sendError(res, 'User not found or already verified', ErrorCodes.BAD_REQUEST, 'USER_NOT_FOUND_OR_VERIFIED');
+       sendError(res, 'User not found or already verified', ErrorCodes.BAD_REQUEST, 'USER_NOT_FOUND_OR_VERIFIED');
+      return
     }
 
     // Generate new OTP
@@ -308,7 +322,8 @@ export const userController = {
       if (!user) {
         logger.auth('login_failed', undefined, email, false, new Error('User not found'));
         logger.security('login_attempt_nonexistent_user', req.ip, req.get('User-Agent'), { email });
-        return sendError(res, 'Invalid credentials', ErrorCodes.UNAUTHORIZED, 'INVALID_CREDENTIALS');
+         sendError(res, 'Invalid credentials', ErrorCodes.UNAUTHORIZED, 'INVALID_CREDENTIALS');
+        return
       }
 
       // Check if account is active
@@ -319,7 +334,8 @@ export const userController = {
           userId: user._id.toString(),
           status: user.status 
         });
-        return sendError(res, 'Account is suspended or inactive', ErrorCodes.FORBIDDEN, 'ACCOUNT_INACTIVE');
+         sendError(res, 'Account is suspended or inactive', ErrorCodes.FORBIDDEN, 'ACCOUNT_INACTIVE');
+        return
       }
 
       if (!user.password) {
@@ -335,14 +351,16 @@ export const userController = {
           email, 
           userId: user._id.toString() 
         });
-        return sendError(res, 'Invalid credentials', ErrorCodes.UNAUTHORIZED, 'INVALID_CREDENTIALS');
+         sendError(res, 'Invalid credentials', ErrorCodes.UNAUTHORIZED, 'INVALID_CREDENTIALS');
+         return
       }
 
       // Check if email is verified
       if (!user.emailVerified) {
         logger.auth('login_failed', user._id.toString(), email, false, new Error('Email not verified'));
-        return sendError(res, 'Email not verified. Please check your email for verification instructions.', ErrorCodes.FORBIDDEN, 'EMAIL_NOT_VERIFIED');
-      }
+         sendError(res, 'Email not verified. Please check your email for verification instructions.', ErrorCodes.FORBIDDEN, 'EMAIL_NOT_VERIFIED');
+          return
+        }
 
       // Update last login
       user.lastLogin = new Date();
@@ -372,7 +390,8 @@ export const userController = {
     const { refreshToken } = req.body as RefreshTokenInput;
 
     if (!refreshToken) {
-      return sendError(res, 'Refresh token is required', ErrorCodes.BAD_REQUEST, 'MISSING_REFRESH_TOKEN');
+       sendError(res, 'Refresh token is required', ErrorCodes.BAD_REQUEST, 'MISSING_REFRESH_TOKEN');
+      return
     }
 
     logger.info('Token refresh attempt', { ip: req.ip });
@@ -382,7 +401,8 @@ export const userController = {
       const blacklistedToken = await BlacklistedToken.findOne({ token: refreshToken });
       if (blacklistedToken) {
         logger.security('blacklisted_token_usage_attempt', req.ip, req.get('User-Agent'), { token: refreshToken.substring(0, 20) + '...' });
-        return sendError(res, 'Token has been revoked', ErrorCodes.UNAUTHORIZED, 'TOKEN_REVOKED');
+         sendError(res, 'Token has been revoked', ErrorCodes.UNAUTHORIZED, 'TOKEN_REVOKED');
+        return
       }
 
       // Verify refresh token
@@ -393,11 +413,15 @@ export const userController = {
         throw new AppError('Internal server configuration error', 500);
       }
 
+      const tokenOptions: jwt.SignOptions = {
+        expiresIn: config.JWT_EXPIRES_IN as any
+      };
+
       // Generate new access token
       const token = jwt.sign(
         { userId: decoded.userId },
-        config.JWT_SECRET as string,
-        { expiresIn: config.JWT_EXPIRES_IN as string }
+        config.JWT_SECRET,
+        tokenOptions
       );
 
       logger.auth('token_refresh_success', decoded.userId);
@@ -407,7 +431,8 @@ export const userController = {
     } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
         logger.security('invalid_refresh_token', req.ip, req.get('User-Agent'), { error: error.message });
-        return sendError(res, 'Invalid refresh token', ErrorCodes.UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
+         sendError(res, 'Invalid refresh token', ErrorCodes.UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
+        return
       }
       
       logger.auth('token_refresh_failed', undefined, undefined, false, error);
@@ -420,7 +445,8 @@ export const userController = {
     const { email } = req.body;
 
     if (!email) {
-      return sendError(res, 'Email is required', ErrorCodes.BAD_REQUEST, 'MISSING_EMAIL');
+       sendError(res, 'Email is required', ErrorCodes.BAD_REQUEST, 'MISSING_EMAIL');
+      return
     }
 
     logger.info('Password reset request', { email, ip: req.ip });
@@ -432,7 +458,8 @@ export const userController = {
 
     if (!user) {
       logger.security('password_reset_nonexistent_user', req.ip, req.get('User-Agent'), { email });
-      return sendSuccess(res, undefined, successMessage);
+       sendSuccess(res, undefined, successMessage);
+      return
     }
 
     try {
@@ -478,17 +505,20 @@ export const userController = {
     const { token, password, confirmPassword } = req.body;
 
     if (!token || !password || !confirmPassword) {
-      return sendError(res, 'Token, password and confirm password are required', ErrorCodes.BAD_REQUEST, 'MISSING_FIELDS');
+      sendError(res, 'Token, password and confirm password are required', ErrorCodes.BAD_REQUEST, 'MISSING_FIELDS');
+      return
     }
 
     if (password !== confirmPassword) {
-      return sendError(res, 'Passwords do not match', ErrorCodes.BAD_REQUEST, 'PASSWORD_MISMATCH');
+       sendError(res, 'Passwords do not match', ErrorCodes.BAD_REQUEST, 'PASSWORD_MISMATCH');
+       return
     }
 
     // Validate password strength
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
-      return sendError(res, passwordValidation.message!, ErrorCodes.BAD_REQUEST, 'WEAK_PASSWORD');
+       sendError(res, passwordValidation.message!, ErrorCodes.BAD_REQUEST, 'WEAK_PASSWORD');
+      return
     }
 
     logger.info('Password reset attempt', { ip: req.ip });
@@ -508,7 +538,8 @@ export const userController = {
 
       if (!user) {
         logger.security('invalid_password_reset_token', req.ip, req.get('User-Agent'), { token: token.substring(0, 10) + '...' });
-        return sendError(res, 'Password reset token is invalid or has expired', ErrorCodes.BAD_REQUEST, 'INVALID_RESET_TOKEN');
+         sendError(res, 'Password reset token is invalid or has expired', ErrorCodes.BAD_REQUEST, 'INVALID_RESET_TOKEN');
+        return
       }
 
       // Update password
@@ -546,7 +577,8 @@ export const userController = {
 
     if (!user) {
       logger.error('User not found in authenticated request');
-      return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+       sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+      return
     }
 
     logger.info('Profile retrieved', { userId: user._id.toString() });
@@ -561,7 +593,8 @@ export const userController = {
     const { firstName, lastName, username, email, phone } = req.body as UpdateProfileInput;
     
     if (!req.user) {
-      return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+       sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+      return
     }
     
     const userId = req.user._id;
@@ -577,7 +610,8 @@ export const userController = {
           userId: userId.toString(), 
           attemptedEmail: email 
         });
-        return sendError(res, 'Email already in use', ErrorCodes.CONFLICT, 'EMAIL_IN_USE');
+         sendError(res, 'Email already in use', ErrorCodes.CONFLICT, 'EMAIL_IN_USE');
+        return
       }
       updateData.email = email;
       updateData.emailVerified = false; // Require re-verification if email changes
@@ -590,7 +624,8 @@ export const userController = {
           userId: userId.toString(), 
           attemptedUsername: username 
         });
-        return sendError(res, 'Username already taken', ErrorCodes.CONFLICT, 'USERNAME_TAKEN');
+         sendError(res, 'Username already taken', ErrorCodes.CONFLICT, 'USERNAME_TAKEN');
+        return
       }
       updateData.username = username;
     }
@@ -609,7 +644,8 @@ export const userController = {
       );
 
       if (!updatedUser) {
-        return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+         sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+        return
       }
 
       logger.auth('profile_update_success', userId.toString(), updatedUser.email);
@@ -629,27 +665,31 @@ export const userController = {
     const { currentPassword, newPassword } = req.body as ChangePasswordInput;
 
     if (!req.user) {
-      return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+       sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+      return
     }
     
     const userId = req.user._id;
     logger.info('Password change attempt', { userId: userId.toString() });
 
     if (currentPassword === newPassword) {
-      return sendError(res, 'New password must be different from current password', ErrorCodes.BAD_REQUEST, 'SAME_PASSWORD');
+       sendError(res, 'New password must be different from current password', ErrorCodes.BAD_REQUEST, 'SAME_PASSWORD');
+      return
     }
 
     // Validate new password strength
     const passwordValidation = validatePasswordStrength(newPassword);
     if (!passwordValidation.isValid) {
-      return sendError(res, passwordValidation.message!, ErrorCodes.BAD_REQUEST, 'WEAK_PASSWORD');
+       sendError(res, passwordValidation.message!, ErrorCodes.BAD_REQUEST, 'WEAK_PASSWORD');
+      return
     }
 
     try {
       // Find user with password
       const user = await User.findById(userId).select('+password');
       if (!user) {
-        return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+         sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+        return
       }
 
       if (!user.password) {
@@ -662,7 +702,8 @@ export const userController = {
       if (!isPasswordValid) {
         logger.auth('password_change_failed', userId.toString(), user.email, false, new Error('Invalid current password'));
         logger.security('password_change_invalid_current', req.ip, req.get('User-Agent'), { userId: userId.toString() });
-        return sendError(res, 'Current password is incorrect', ErrorCodes.UNAUTHORIZED, 'INVALID_CURRENT_PASSWORD');
+         sendError(res, 'Current password is incorrect', ErrorCodes.UNAUTHORIZED, 'INVALID_CURRENT_PASSWORD');
+        return
       }
 
       // Update password
@@ -738,7 +779,8 @@ export const userController = {
 
     if (!user) {
       logger.info('Admin requested non-existent user', { userId });
-      return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+       sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+      return
     }
 
     sendSuccess(res, {
@@ -771,7 +813,8 @@ export const userController = {
           field: field.toLowerCase(), 
           value: field === 'Email' ? email : username 
         });
-        return sendError(res, `${field} already in use`, ErrorCodes.CONFLICT, 'DUPLICATE_FIELD');
+         sendError(res, `${field} already in use`, ErrorCodes.CONFLICT, 'DUPLICATE_FIELD');
+        return
       }
     }
 
@@ -784,7 +827,8 @@ export const userController = {
 
       if (!updatedUser) {
         logger.info('Admin attempted to update non-existent user', { userId });
-        return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+         sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+        return
       }
 
       logger.auth('admin_update_user_success', userId, updatedUser.email);
@@ -809,7 +853,8 @@ export const userController = {
 
       if (!user) {
         logger.info('Admin attempted to delete non-existent user', { userId });
-        return sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+         sendError(res, 'User not found', ErrorCodes.NOT_FOUND, 'USER_NOT_FOUND');
+        return
       }
 
       logger.auth('admin_delete_user_success', userId, user.email);
@@ -831,7 +876,8 @@ export const userController = {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return sendError(res, 'Refresh token is required', ErrorCodes.BAD_REQUEST, 'MISSING_REFRESH_TOKEN');
+       sendError(res, 'Refresh token is required', ErrorCodes.BAD_REQUEST, 'MISSING_REFRESH_TOKEN');
+      return
     }
 
     logger.info('User logout attempt', { ip: req.ip });
@@ -853,7 +899,8 @@ export const userController = {
     } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
         logger.security('invalid_logout_token', req.ip, req.get('User-Agent'), { error: error.message });
-        return sendError(res, 'Invalid refresh token', ErrorCodes.UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
+         sendError(res, 'Invalid refresh token', ErrorCodes.UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
+        return
       }
       
       logger.auth('logout_failed', undefined, undefined, false, error);
@@ -865,9 +912,8 @@ export const userController = {
   googleAuth: passport.authenticate('google', { scope: ['profile', 'email'] }),
 
   googleCallback: asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const startTime = Date.now();const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { firstName,
+
+    const startTime = Date.now();
     
     await new Promise<void>((resolve, reject) => {
       passport.authenticate('google', { session: false }, async (err: Error | null, user: any) => {
@@ -909,5 +955,5 @@ export const userController = {
         }
       })(req, res, next);
     });
-  })
+})
 };
