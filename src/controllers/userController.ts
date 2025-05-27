@@ -35,22 +35,26 @@ const generateTokens = (userId: string) => {
   const jwtSecret = config.JWT_SECRET as string;
   const refreshSecret = config.JWT_REFRESH_SECRET as string;
 
-// ...existing code...
-const tokenOptions: jwt.SignOptions = { expiresIn: Number(config.JWT_EXPIRES_IN) };
-const refreshOptions: jwt.SignOptions = { expiresIn: Number(config.JWT_REFRESH_EXPIRES_IN) };
-// ...existing code...
+  // Use the expiresIn values directly as strings
+  const tokenOptions: jwt.SignOptions = { 
+    expiresIn: config.JWT_EXPIRES_IN as any
+  };
+  
+  const refreshOptions: jwt.SignOptions = { 
+    expiresIn: config.JWT_REFRESH_EXPIRES_IN as any
+  };
 
-const token = jwt.sign(
-  { userId },
-  jwtSecret,
-  tokenOptions
-);
+  const token = jwt.sign(
+    { userId },
+    jwtSecret,
+    tokenOptions
+  );
 
-const refreshToken = jwt.sign(
-  { userId },
-  refreshSecret,
-  refreshOptions
-);
+  const refreshToken = jwt.sign(
+    { userId },
+    refreshSecret,
+    refreshOptions
+  );
 
   return { token, refreshToken };
 };

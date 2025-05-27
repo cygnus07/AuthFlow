@@ -10,8 +10,8 @@ beforeAll(async () => {
   const uri = mongod.getUri();
   
   // Override MongoDB URI for tests
-  process.env.MONGODB_URI = uri;
-  process.env.NODE_ENV = 'test';
+  config.MONGODB_URI = uri;
+  config.NODE_ENV = 'test';
   
   // Connect to the in-memory database
   await mongoose.connect(uri);
@@ -22,7 +22,9 @@ beforeEach(async () => {
   const collections = mongoose.connection.collections;
   for (const key in collections) {
     const collection = collections[key];
-    await collection.deleteMany({});
+    if (collection) {
+      await collection.deleteMany({});
+    }
   }
 });
 
@@ -30,7 +32,7 @@ afterAll(async () => {
   // Close database connection
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
-  
+    
   // Stop the in-memory MongoDB instance
   if (mongod) {
     await mongod.stop();

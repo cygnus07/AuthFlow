@@ -93,7 +93,7 @@ export const adminUpdateUserSchema = baseUserSchema.extend({
 
 // Email verification schemas
 export const verifyEmailSchema = z.object({
-  token: z.string().min(1, 'Verification token is required'),
+  otp: z.string().min(1, 'Verification code is required'),
   email: emailSchema.optional(), // Optional for cases where token is sufficient
 });
 

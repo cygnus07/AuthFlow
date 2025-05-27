@@ -278,6 +278,9 @@ describe('Auth Endpoints', () => {
       await request(server).post('/api/users/register').send(userData);
       
       const user = await User.findOne({ email: userData.email });
+      if (!user) {
+        throw new Error('User not found after registration');
+        }
       user.emailVerified = true;
       await user.save();
 
