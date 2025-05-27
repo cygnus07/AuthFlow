@@ -101,6 +101,11 @@ class App {
 
   public listen(): void {
     const port = config.PORT;
+    if (config.NODE_ENV !== 'test') {
+    this.app.listen(port, () => {
+      console.log(`🚀 Server running on port ${port}`);
+    });
+  }
     this.app.listen(port, () => {
       console.log(`🚀 Server running on port ${port} in ${config.NODE_ENV} mode`);
       console.log(`📊 Health check available at http://localhost:${port}/health`);

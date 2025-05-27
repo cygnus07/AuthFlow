@@ -10,6 +10,9 @@ const envSchema = z.object({
   
   // MongoDB configuration
   MONGODB_URI: z.string().optional(),
+
+  // In src/config/environment.ts
+MONGODB_URI_TEST: z.string().optional(),
   
   // PostgreSQL configuration
   POSTGRES_HOST: z.string().optional(),
