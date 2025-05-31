@@ -8,8 +8,8 @@ import { adminUpdateUserSchema } from '../validators/userValidator';
 const router = Router();
 
 // Require admin privileges
-router.use(asyncHandler(authenticate as any));
-router.use(asyncHandler(authorize as any));
+router.use(asyncHandler(authenticate));
+router.use(asyncHandler(authorize('admin'));
 
 // User Management
 router.get('/', adminController.getAllUsers);
