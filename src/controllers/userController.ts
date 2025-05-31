@@ -871,40 +871,32 @@ export const userController = {
     }
   }),
 
-  // Logout user
   logout: asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-       sendError(res, 'Refresh token is required', ErrorCodes.BAD_REQUEST, 'MISSING_REFRESH_TOKEN');
-      return
-    }
-
-    logger.info('User logout attempt', { ip: req.ip });
-
     try {
-      // Verify token to get expiration
-      const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET as string) as { exp: number; userId: string };
-
-      // Add to blacklist
+      const { refreshToken } = req.body;
+  
+      if (!refreshToken) {
+        sendError(res, 'Refresh token is required', ErrorCodes.BAD_REQUEST);
+        return;
+      }
+  
+      // Verify token first to get expiration
+      const decoded = jwt.verify(refreshToken, config.JWT_REFRESH_SECRET) as { exp: number };
+      
+      // Store in blacklist
       await BlacklistedToken.create({
         token: refreshToken,
-        expiresAt: new Date(decoded.exp * 1000)
+        expiresAt: new Date(decoded.exp * 1000) // Convert JWT exp to Date
       });
-
-      logger.auth('logout_success', decoded.userId);
-
-      sendSuccess(res, undefined, 'Logout successful');
-
+  
+      sendSuccess(res, null, 'Logout successful');
     } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
-        logger.security('invalid_logout_token', req.ip, req.get('User-Agent'), { error: error.message });
-         sendError(res, 'Invalid refresh token', ErrorCodes.UNAUTHORIZED, 'INVALID_REFRESH_TOKEN');
-        return
+        sendError(res, 'Invalid refresh token', ErrorCodes.UNAUTHORIZED);
+      } else {
+        logger.error(`Logout error: ${error instanceof Error ? error.stack : error}`);
+        sendError(res, 'Failed to logout', ErrorCodes.INTERNAL_SERVER_ERROR);
       }
-      
-      logger.auth('logout_failed', undefined, undefined, false, error);
-      throw error;
     }
   }),
 

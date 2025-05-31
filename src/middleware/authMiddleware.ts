@@ -1,25 +1,21 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/environment';
-import { ErrorCodes } from '../utils/apiResponse'
-import User from '../models/userModel'
+import { ErrorCodes, sendError } from '../utils/apiResponse';
+import User from '../models/userModel';
 import { logger } from '../utils/logger';
-import BlacklistedToken from '../models/blacklistedTokenModel'
+import BlacklistedToken from '../models/blacklistedTokenModel';
 import { AuthenticatedRequest, AuthUser } from '../types/userTypes';
 
-
-// Add a proper type declaration to extend Express.Request
 declare global {
   namespace Express {
-    interface User extends AuthUser {} // Make Express.User compatible with AuthUser
-    
+    interface User extends AuthUser {}
     interface Request {
-        user?: AuthUser;
+      user?: AuthUser;
       token?: string;
     }
   }
 }
-
 
 export const withAuth = <T extends Request>(
   handler: (req: T & AuthenticatedRequest, res: Response, next?: NextFunction) => Promise<void> | void
@@ -33,85 +29,79 @@ export const withAuth = <T extends Request>(
   };
 };
 
-// Main authentication middleware
-const authenticate = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
+const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      const error = new Error('Authentication required');
-      (error as any).statusCode = 401;
-      (error as any).code = ErrorCodes.UNAUTHORIZED;
-      throw error;
+      sendError(res, 'Authentication required', ErrorCodes.UNAUTHORIZED, 'MISSING_AUTH_HEADER');
+      return;
     }
-    
     
     const token = authHeader.split(' ')[1];
 
     if (!token) {
-  const error = new Error('Authentication token missing');
-  (error as any).statusCode = 401;
-  (error as any).code = ErrorCodes.UNAUTHORIZED;
-  throw error;
-}
-
+      sendError(res, 'Authentication token missing', ErrorCodes.UNAUTHORIZED, 'MISSING_TOKEN');
+      return;
+    }
 
     if (!config.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined');
+      throw new Error('JWT_SECRET is not defined');
     }
+
     const decoded = jwt.verify(token, config.JWT_SECRET) as any;
     const user = await User.findById(decoded.userId);
 
     const isBlacklisted = await BlacklistedToken.findOne({ token });
     if (isBlacklisted) {
-      throw new Error('Token revoked');
+      sendError(res, 'Token revoked', ErrorCodes.UNAUTHORIZED, 'TOKEN_REVOKED');
+      return;
     }
     
     if (!user) {
-      const error = new Error('User not found');
-      (error as any).statusCode = 401;
-      (error as any).code = ErrorCodes.UNAUTHORIZED;
-      throw error;
+      sendError(res, 'User not found', ErrorCodes.UNAUTHORIZED, 'USER_NOT_FOUND');
+      return;
     }
     
-    req.user = user as unknown as AuthUser; // Cast to AuthUser type
+    req.user = user as unknown as AuthUser;
     req.token = token;
     next();
   } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      if (error.name === 'TokenExpiredError') {
+        sendError(res, 'Token expired', ErrorCodes.UNAUTHORIZED, 'TOKEN_EXPIRED');
+      } else {
+        sendError(res, 'Invalid token', ErrorCodes.UNAUTHORIZED, 'INVALID_TOKEN');
+      }
+      return;
+    }
+    
     logger.error(`Auth middleware error: ${error}`);
     next(error);
   }
 };
 
-// Authorization middleware
 const authorize = (...roles: string[]) => {
-  return (req: Request, _res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      const error = new Error('Authentication required');
-      (error as any).statusCode = 401;
-      (error as any).code = ErrorCodes.UNAUTHORIZED;
-      return next(error);
+      sendError(res, 'Authentication required', ErrorCodes.UNAUTHORIZED, 'UNAUTHORIZED');
+      return;
     }
     
     if (!roles.includes(req.user.role)) {
-      const error = new Error('Not authorized to access this resource');
-      (error as any).statusCode = 403;
-      (error as any).code = ErrorCodes.FORBIDDEN;
-      return next(error);
+      sendError(res, 'Not authorized to access this resource', ErrorCodes.FORBIDDEN, 'FORBIDDEN');
+      return;
     }
     
     next();
   };
 };
 
-// Combined auth object
 export const auth = {
   authenticate,
   authorize,
-  // Common role-based middleware combinations
   admin: [authenticate, authorize('admin')],
   user: [authenticate, authorize('user')],
 };
 
-// Also export individual functions if needed elsewhere
 export { authenticate, authorize };
