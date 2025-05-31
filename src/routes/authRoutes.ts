@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authController } from '../controllers/authController';
 import { validate } from '../middleware/validationMiddleware';
-// import { asyncHandler } from '../middleware/errorHandler';
+import { asyncHandler } from '../middleware/errorHandler';
 import {
   registerSchema,
   loginSchema,
@@ -31,7 +31,7 @@ router.post('/verify-email', validate(verifyEmailSchema), authController.verifyE
 router.post('/resend-verification', validate(resendVerificationSchema), authController.resendVerificationEmail);
 
 // Google OAuth
-router.get('/google', authController.googleAuth);
+router.get('/google', asyncHandler(authController.googleAuth));
 router.get('/google/callback', authController.googleCallback);
 
 export default router;
