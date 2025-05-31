@@ -9,7 +9,7 @@ const router = Router();
 
 // Require admin privileges
 router.use(asyncHandler(authenticate));
-router.use(asyncHandler(authorize('admin'));
+router.use(asyncHandler(authorize('admin') as any));
 
 // User Management
 router.get('/', adminController.getAllUsers);
