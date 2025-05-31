@@ -1,15 +1,21 @@
 import { Router } from 'express';
 import healthRoutes from './health';
-import userRoutes from './users';
-// Import other route modules here
+import authRoutes from './authRoutes';
+import userRoutes from './userRoutes';
+import adminRoutes from './adminRoutes';
 
 const router = Router();
 
-// API Routes
+// System routes
 router.use('/health', healthRoutes);
+
+// Authentication routes (public)
+router.use('/auth', authRoutes);
+
+// Authenticated user routes (requires login)
 router.use('/users', userRoutes);
-// Add other routes here
-// router.use('/auth', authRoutes);
-// router.use('/posts', postRoutes);
+
+// Admin routes (requires admin role)
+router.use('/admin', adminRoutes);
 
 export default router;
