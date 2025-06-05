@@ -652,4 +652,4 @@ googleCallback: asyncHandler(async (req: Request, res: Response, next: NextFunct
     })(req, res, next);
   });
 }),
-  };
+  }; 
