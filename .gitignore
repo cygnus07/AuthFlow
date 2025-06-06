@@ -155,3 +155,5 @@ prisma/migrations/
 Dockerfile*
 docker-compose*
 .dockerignore
+
+tests

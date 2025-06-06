@@ -1,11 +1,11 @@
 
-@host = http://localhost:3000/api/users
-@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM1NzBmYmVmY2IzYTQ1NDMxZGZiMjQiLCJpYXQiOjE3NDgzMzUwOTAsImV4cCI6MTc0ODQyMTQ5MH0.SCI0YJxx-hQ084ssU2D2ezpKq_gh9hrLu96EZ7HW2mQ
+@host = http://localhost:3000/api/auth
+@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODQzMGNjMzJjMDQzZDNmM2I4M2U1MWQiLCJpYXQiOjE3NDkyMjQ2OTYsImV4cCI6MTc0OTMxMTA5Nn0.CuLZWXloqKrphX3BZZhXJGJawfnzZuvg8Qk3Z2Kzlq4
 
 
 
 ### Register Request
-POST http://localhost:3000/api/users/register
+POST http://localhost:3000/api/auth/register
 Content-Type: application/json
 
 {
@@ -20,12 +20,12 @@ Content-Type: application/json
 
 
 ### Verify Email Request
-POST http://localhost:3000/api/users/verify-email
+POST http://localhost:3000/api/auth/verify-email
 Content-Type: application/json
 
 {
   "email": "kuldeepsingh21070@gmail.com",
-  "otp": "269155"
+  "otp": "300308"
 }
 
 ### Resend OTP Request
@@ -60,7 +60,7 @@ POST {{host}}/forgot-password
 Content-Type: application/json
 
 {
-  "email": "test@example.com"
+  "email": "kuldeepsingh21070@gmail.com"
 }
 
 ### Reset Password
@@ -76,7 +76,7 @@ Content-Type: application/json
 GET {{host}}/auth/google
 
 ### Google OAuth Callback (simulate browser redirect)
-GET {{host}}/auth/google/callback?code=dummy-auth-code
+GET {{host}}/auth/google/callback
 
 ### Get Profile
 GET {{host}}/profile
