@@ -8,6 +8,7 @@ import { config } from '@/config/environment';
 import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
 import { requestLogger } from '@/middleware/requestLogger';
 import apiRoutes from '@/routes';
+import passport from './config/passport';
 
 class App {
   public app: Application;
@@ -86,6 +87,8 @@ class App {
         timestamp: new Date().toISOString(),
       });
     });
+
+    this.app.use(passport.initialize());
 
     // API routes
     this.app.use('/api', apiRoutes);

@@ -1,73 +1,60 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy, Profile as GoogleProfile, StrategyOptions } from 'passport-google-oauth20';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import User from '../models/userModel';
 import { config } from '../config/environment';
 import { logger } from '../utils/logger';
 import crypto from 'crypto';
-// import { IUser } from '../types/userTypes.js';
-// import { HydratedDocument } from 'mongoose';
 
 // Google Strategy Configuration
 passport.use(
   new GoogleStrategy(
     {
-      clientID: config.GOOGLE_CLIENT_ID,
-      clientSecret: config.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${config.API_BASE_URL}/api/v1/users/auth/google/callback`,
-      scope: ['profile', 'email'],
-    } as StrategyOptions,
-    async (
-      _accessToken: string,
-      _refreshToken: string,
-      profile: GoogleProfile,
-      done: (error: any, user?: any) => void
-    ) => {
+      clientID: config.GOOGLE_CLIENT_ID as string,
+      clientSecret: config.GOOGLE_CLIENT_SECRET as string,
+      callbackURL: `${config.API_BASE_URL}/api/v1/auth/google/callback`,
+      passReqToCallback: true, // Add this to access req in callback
+    },
+    async (_req: any, _accessToken: string, _refreshToken: string, profile: any, done: Function) => {
       try {
-        const email = profile.emails?.[0]?.value || `${profile.id}@googleuser.com`;
-
-        const firstName = profile.name?.givenName || profile.displayName?.split(' ')[0] || 'User';
-        const lastName =
-          profile.name?.familyName ||
-          (profile.displayName?.split(' ').length > 1
-            ? profile.displayName.split(' ').slice(1).join(' ')
-            : 'Unknown');
-
-        const existingUser = await User.findOne({
-          $or: [{ googleId: profile.id }, { email }],
-        });
-
-        if (existingUser) {
-          if (!existingUser.googleId) {
-            existingUser.googleId = profile.id;
-            await existingUser.save();
-          }
-          return done(null, existingUser);
+        const email = profile.emails?.[0]?.value;
+        if (!email) {
+          return done(new Error('No email found in Google profile'), null);
         }
 
-        const randomPassword = crypto.randomBytes(20).toString('hex');
-
-        const newUser = await User.create({
-          googleId: profile.id,
-          email,
-          firstName,
-          lastName,
-          password: randomPassword,
-          emailVerified: true,
+        // Find or create user
+        let user = await User.findOne({ 
+          $or: [{ googleId: profile.id }, { email }] 
         });
 
-        return done(null, newUser);
+        if (!user) {
+          const randomPassword = crypto.randomBytes(20).toString('hex');
+          user = await User.create({
+            googleId: profile.id,
+            email,
+            firstName: profile.name?.givenName || profile.displayName?.split(' ')[0] || 'User',
+            lastName: profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ') || 'Unknown',
+            password: randomPassword,
+            emailVerified: true,
+            avatar: profile.photos?.[0]?.value,
+          });
+        } else if (!user.googleId) {
+          // Update existing user with Google ID
+          user.googleId = profile.id;
+          await user.save();
+        }
+
+        return done(null, user);
       } catch (error) {
         logger.error(`Google authentication error: ${error}`);
-        return done(error as Error);
+        return done(error, null);
       }
     }
   )
 );
 
-// Serialize and deserialize user
-passport.serializeUser((user: Express.User, done) => {
-//   const userId = (user as IUser)._id.toString();
-  done(null, user._id?.toString());
+// Since we're using JWT, we can keep these simple
+passport.serializeUser((user: any, done) => {
+  done(null, user.id);
 });
 
 passport.deserializeUser(async (id: string, done) => {
@@ -75,7 +62,7 @@ passport.deserializeUser(async (id: string, done) => {
     const user = await User.findById(id);
     done(null, user);
   } catch (error) {
-    done(error);
+    done(error, null);
   }
 });
 

@@ -595,61 +595,54 @@ export const authController = {
       }
     }),
   
-   googleAuth: (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    console.log('Google auth called');
+    googleAuth: (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate('google', {
       scope: ['profile', 'email'],
-      session: false
-    })(req, res, (err: unknown) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve();
-      }
-    });
-  });
-},
+      session: false,
+      state: req.query['redirect_uri']?.toString() // Optional: for redirect after auth
+    })(req, res, next);
+  },
 
-googleCallback: asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    passport.authenticate('google', { session: false }, async (err: Error, user: any) => {
+ // Google Auth Callback
+  googleCallback: asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    passport.authenticate('google', { session: false }, (err: any, user: any, _info: any) => {
       try {
         if (err) {
-          logger.error(`Google auth callback error: ${err}`);
-          res.redirect(`${config.CLIENT_URL}/login?error=Google authentication failed`);
-          return reject(err);
+          logger.error(`Google auth error: ${err}`);
+          return res.redirect(`${config.CLIENT_URL}/login?error=google_auth_failed`);
         }
 
         if (!user) {
-          res.redirect(`${config.CLIENT_URL}/login?error=Could not authenticate with Google`);
-          return reject(new Error('No user returned from Google authentication'));
+          logger.error('No user returned from Google auth');
+          return res.redirect(`${config.CLIENT_URL}/login?error=no_user_found`);
         }
 
-        // Generate JWT tokens
+        // Create tokens
         const token = jwt.sign(
-          { userId: user._id },
-          config.JWT_SECRET,
-          { expiresIn: config.JWT_EXPIRES_IN } as jwt.SignOptions  
-        );
-        
-        const refreshToken = jwt.sign(
-          { userId: user._id },
-          config.JWT_REFRESH_SECRET,
-          { expiresIn: config.JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
+          { 
+            userId: user._id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName 
+          },
+          config.JWT_SECRET as string,
+          { expiresIn: config.JWT_EXPIRES_IN as any }
         );
 
-        // Redirect to frontend with tokens
-        res.redirect(
-          `${config.CLIENT_URL}/social-auth-success?token=${token}&refreshToken=${refreshToken}`
+        const refreshToken = jwt.sign (
+          { userId: user._id },
+          config.JWT_REFRESH_SECRET as string,
+          { expiresIn: config.JWT_REFRESH_EXPIRES_IN as any }
         );
-        resolve();
+
+        // Successful authentication
+        return res.redirect(
+          `${config.CLIENT_URL}/auth/success?token=${token}&refreshToken=${refreshToken}`
+        );
       } catch (error) {
-        logger.error(`Failed to generate tokens: ${error}`);
-        res.redirect(`${config.CLIENT_URL}/login?error=Authentication successful but token generation failed`);
-        reject(error);
+        logger.error(`Token generation error: ${error}`);
+        return res.redirect(`${config.CLIENT_URL}/login?error=token_generation_failed`);
       }
     })(req, res, next);
-  });
-}),
-  }; 
+  }),
+};

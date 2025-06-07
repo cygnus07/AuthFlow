@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { authController } from '../controllers/authController';
 import { validate } from '../middleware/validationMiddleware';
-import { asyncHandler } from '../middleware/errorHandler';
+// import { asyncHandler } from '../middleware/errorHandler';
+// import passport from 'passport';
 import {
   registerSchema,
   loginSchema,
@@ -30,8 +31,15 @@ router.post('/reset-password', validate(resetPasswordSchema), authController.res
 router.post('/verify-email', validate(verifyEmailSchema), authController.verifyEmail);
 router.post('/resend-verification', validate(resendVerificationSchema), authController.resendVerificationEmail);
 
-// Google OAuth
-router.get('/google', asyncHandler(authController.googleAuth));
-router.get('/google/callback', authController.googleCallback);
+// Google OAuth Routes
+router.get('/google', authController.googleAuth as any);
+
+router.get('/google/callback', 
+  // passport.authenticate('google', { 
+  //   failureRedirect: '/login',
+  //   session: false 
+  // }),
+  authController.googleCallback
+);
 
 export default router;
