@@ -79,15 +79,34 @@ class App {
 
   private initializeRoutes(): void {
     // Root route
-    this.app.get('/', (_req ,res: Response) => {
-      res.status(200).json({
-        status: 'API running',
-        message: 'Welcome to the Node.js TypeScript Express API',
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
+      this.app.get('/', (_req, res: Response) => {
+        res.status(200).json({
+          api: 'AuthFlow API',
+          description: 'Professional JWT Authentication & User Management',
+          version: '1.0.0',
+          status: '🚀 Running',
+          documentation: 'https://authflow-docs.kuldeepdev.me',
+          API: 'https://authflow.kuldeepdev.me',
+          features: [
+            '🔐 JWT Authentication',
+            '👥 User Management', 
+            '📧 Email Verification',
+            '🔄 Password Recovery',
+            '🛡️ Security & Rate Limiting'
+          ],
+          quickStart: {
+            '📚 Documentation': 'https://docs.kuldeepdev.me',
+            '💚 Health Check': '/health',
+            '🔑 Register': 'POST /api/auth/register',
+            '🚪 Login': 'POST /api/auth/login'
+          },
+          contact: {
+            email: 'kuldeepsingh21070@gmail.com',
+            github: 'https://github.com/cygnus07'
+          },
+          timestamp: new Date().toISOString()
+        });
       });
-    });
-
     this.app.use(passport.initialize());
 
     // API routes
