@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler, ErrorRequestHandler } from 'express';
-import { config } from '@/config/environment';
+import { config } from '../config/environment';
 
 export interface ApiError extends Error {
   statusCode?: number;

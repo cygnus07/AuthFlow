@@ -4,10 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import { config } from '@/config/environment';
-import { errorHandler, notFoundHandler } from '@/middleware/errorHandler';
-import { requestLogger } from '@/middleware/requestLogger';
-import apiRoutes from '@/routes';
+import { config } from './config/environment';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { requestLogger } from './middleware/requestLogger';
+import apiRoutes from './routes/index';
 import passport from './config/passport';
 
 class App {

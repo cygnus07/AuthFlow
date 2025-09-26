@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { isDatabaseHealthy } from '@/config/db';
-import { config } from '@/config/environment';
-import { asyncHandler } from '@/middleware/errorHandler';
+import { isDatabaseHealthy } from '../config/db';
+import { config } from '../config/environment';
+import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
 

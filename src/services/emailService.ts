@@ -1,7 +1,7 @@
 // src/services/email.service.ts
 import nodemailer from 'nodemailer';
-import { config } from '@/config/environment';
-import { logger } from '@/utils/logger';
+import { config } from '../config/environment';
+import { logger } from '../utils/logger';
 
 // Create reusable transporter object using SMTP transport
 const transporter = nodemailer.createTransport({
