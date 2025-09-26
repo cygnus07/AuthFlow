@@ -35,7 +35,7 @@ class App {
 
     // CORS configuration
     this.app.use(cors({
-      origin: config.CORS_ORIGIN,
+      origin: ['http://localhost:3000', 'https://authflow-docs.kuldeepdev.me'],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
