@@ -1,273 +1,317 @@
-# Node.js Express TypeScript Starter
+# AuthFlow API
 
-A production-ready, modular backend starter template built with Node.js, Express, and TypeScript. This template provides a solid foundation for building scalable REST APIs with best practices, comprehensive error handling, and flexible database support.
+A production-ready authentication API built with Node.js, Express, TypeScript, and MongoDB. Features comprehensive user management, JWT-based authentication, OAuth integration, and robust security measures.
 
-## 🚀 Features
+**🚀 Live API:** [authflow-api.kuldeepdev.me](https://authflow.kuldeepdev.me)
 
-- **TypeScript**: Full TypeScript support with strict configuration
-- **Express.js**: Fast, unopinionated web framework
-- **Database Support**: MongoDB (Mongoose) and PostgreSQL (pg/Prisma)
-- **Security**: Helmet, CORS, rate limiting, and request validation
-- **Error Handling**: Centralized error handling with custom error classes
-- **Logging**: Request logging and error tracking
-- **Health Checks**: Comprehensive health check endpoints
-- **Environment Configuration**: Robust environment variable validation with Zod
-- **Production Ready**: Compression, security headers, graceful shutdown
-- **Development Tools**: Hot reload, linting, testing setup
+## Features
 
-## 📁 Project Structure
+- **JWT Authentication** - Access tokens with refresh token rotation
+- **User Management** - Registration, login, profile management
+- **Email Verification** - OTP-based email verification system
+- **Password Recovery** - Secure password reset with email notifications
+- **OAuth Integration** - Google OAuth2.0 support
+- **Admin Panel** - User management and administrative controls  
+- **Security** - Rate limiting, CORS, helmet, input validation
+- **Health Monitoring** - Comprehensive system health checks
+- **TypeScript** - Full type safety and modern development
+- **Testing** - Jest test suite with authentication coverage
 
-```
-project-root/
-├── src/
-│   ├── app.ts                 # Express app configuration
-│   ├── index.ts              # Server entry point
-│   ├── config/
-│   │   ├── environment.ts    # Environment validation
-│   │   └── db.ts            # Database connections
-│   ├── middleware/
-│   │   ├── errorHandler.ts  # Error handling middleware
-│   │   └── requestLogger.ts # Request logging
-│   └── routes/
-│       ├── index.ts         # Route aggregation
-│       ├── health.ts        # Health check routes
-│       └── users.ts         # Example user routes
-├── .env.example              # Environment variables template
-├── .gitignore               # Git ignore rules
-├── package.json             # Dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-└── README.md                # Project documentation
-```
+## Tech Stack
 
-## 🛠️ Installation
+- **Runtime:** Node.js 18+
+- **Framework:** Express.js
+- **Language:** TypeScript
+- **Database:** MongoDB with Mongoose ODM
+- **Authentication:** JWT + Refresh Tokens
+- **Email:** Nodemailer with Gmail SMTP
+- **Validation:** Zod schema validation
+- **Testing:** Jest with Supertest
+- **Security:** Helmet, CORS, bcryptjs, rate limiting
 
-1. **Clone or download the template**
+## Quick Start
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### Prerequisites
 
-3. **Environment setup**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+- Node.js 18+ 
+- MongoDB 4.4+
+- Gmail account for email services
 
-4. **Database setup**
-   
-   **For MongoDB:**
-   ```bash
-   # Install MongoDB locally or use MongoDB Atlas
-   # Update MONGODB_URI in .env
-   ```
+### Installation
 
-   **For PostgreSQL:**
-   ```bash
-   # Install PostgreSQL locally or use a cloud service
-   # Update PostgreSQL configuration in .env
-   ```
-
-## 🚦 Getting Started
-
-### Development
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd authflow-api
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your configuration (see Environment Setup below)
+
+# Start development server
 npm run dev
 ```
 
-### Production Build
-```bash
-npm run build
-npm start
-```
+### Environment Setup
 
-### Available Scripts
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build TypeScript to JavaScript
-- `npm start` - Start production server
-- `npm run clean` - Clean build directory
-- `npm run type-check` - Check TypeScript without building
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint errors
-- `npm test` - Run tests
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Run tests with coverage
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and configure:
+Create a `.env` file with the following configuration:
 
 ```bash
-# Server
+# Server Configuration
 NODE_ENV=development
 PORT=3000
 
 # Database
-DATABASE_TYPE=mongodb  # or postgresql
-MONGODB_URI=mongodb://localhost:27017/your-db
+DATABASE_TYPE=mongodb
+MONGODB_URI=mongodb://localhost:27017/authflow
+MONGODB_URI_TEST=mongodb://localhost:27017/authflow-test
 
-# Security
-JWT_SECRET=your-secret-key
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-here
+JWT_REFRESH_SECRET=your-super-secret-refresh-key-here
+JWT_EXPIRES_IN=24h
+JWT_REFRESH_EXPIRES_IN=7d
+BCRYPT_ROUNDS=12
+
+# Email Configuration
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-gmail@gmail.com
+EMAIL_PASS=your-app-specific-password
+EMAIL_FROM=your-gmail@gmail.com
+EMAIL_SECURE=false
+EMAIL_SERVICE=gmail
+
+# OAuth (Optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Application
+APP_NAME=AuthFlow API
+CLIENT_URL=http://localhost:3000
 CORS_ORIGIN=http://localhost:3000
 ```
 
-### Database Configuration
-
-The template supports both MongoDB and PostgreSQL:
-
-**MongoDB with Mongoose:**
-```typescript
-// Set in .env
-DATABASE_TYPE=mongodb
-MONGODB_URI=mongodb://localhost:27017/your-database
-```
-
-**PostgreSQL with pg:**
-```typescript
-// Set in .env
-DATABASE_TYPE=postgresql
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=username
-POSTGRES_PASSWORD=password
-POSTGRES_DATABASE=database_name
-```
-
-**PostgreSQL with Prisma:**
-```typescript
-// Uncomment Prisma connection in src/config/db.ts
-// Set in .env
-DATABASE_TYPE=postgresql
-DATABASE_URL=postgresql://username:password@localhost:5432/database_name
-```
-
-## 📊 Health Checks
-
-The template includes comprehensive health check endpoints:
-
-- `GET /health` - Basic health status
-- `GET /api/health` - Detailed health information
-- `GET /api/health/ready` - Readiness probe (for Kubernetes)
-- `GET /api/health/live` - Liveness probe (for Kubernetes)
-
-## 🛡️ Security Features
-
-- **Helmet**: Security headers
-- **CORS**: Cross-origin resource sharing
-- **Rate Limiting**: Request rate limiting
-- **Input Validation**: Request validation middleware
-- **Error Handling**: Secure error responses
-
-## 🔍 API Examples
-
-### Users API
+### Available Scripts
 
 ```bash
-# Get all users
-GET /api/users
-
-# Get user by ID
-GET /api/users/:id
-
-# Create user
-POST /api/users
-{
-  "name": "John Doe",
-  "email": "john@example.com"
-}
-
-# Update user
-PUT /api/users/:id
-{
-  "name": "Jane Doe"
-}
-
-# Delete user
-DELETE /api/users/:id
+npm run dev          # Start development server with hot reload
+npm run build        # Build TypeScript to JavaScript
+npm start            # Start production server
+npm run clean        # Clean build directory
+npm run type-check   # TypeScript type checking
+npm run lint         # Run ESLint
+npm run lint:fix     # Fix ESLint errors
+npm test             # Run test suite
+npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
 ```
 
-## 🧪 Testing
+## Project Structure
+
+```
+src/
+├── app.ts                    # Express app configuration
+├── index.ts                  # Server entry point
+├── config/
+│   ├── db.ts                # Database connection
+│   ├── environment.ts       # Environment validation
+│   └── passport.ts          # OAuth configuration
+├── controllers/
+│   ├── adminController.ts   # Admin user management
+│   ├── authController.ts    # Authentication logic
+│   └── userController.ts    # User profile management
+├── middleware/
+│   ├── authMiddleware.ts    # JWT validation
+│   ├── errorHandler.ts      # Error handling
+│   ├── requestLogger.ts     # Request logging
+│   └── validationMiddleware.ts # Input validation
+├── models/
+│   ├── blacklistedTokenModel.ts # Token blacklist
+│   └── userModel.ts         # User schema
+├── routes/
+│   ├── adminRoutes.ts       # Admin endpoints
+│   ├── authRoutes.ts        # Auth endpoints
+│   ├── health.ts            # Health checks
+│   ├── index.ts             # Route aggregation
+│   └── userRoutes.ts        # User endpoints
+├── services/
+│   └── emailService.ts      # Email functionality
+├── types/
+│   └── userTypes.ts         # TypeScript definitions
+├── utils/
+│   ├── apiResponse.ts       # Response formatting
+│   └── logger.ts            # Logging utilities
+└── validators/
+    └── userValidator.ts     # Input validation schemas
+```
+
+## API Endpoints
+
+### Health Checks
+- `GET /health` - Basic health status
+- `GET /api/health` - Detailed system health
+- `GET /api/health/ready` - Readiness probe
+- `GET /api/health/live` - Liveness probe
+
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login  
+- `POST /api/auth/logout` - User logout
+- `POST /api/auth/refresh-token` - Refresh access token
+- `POST /api/auth/verify-email` - Verify email with OTP
+- `POST /api/auth/resend-verification` - Resend verification email
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password with token
+- `GET /api/auth/google` - Google OAuth login
+- `GET /api/auth/google/callback` - Google OAuth callback
+
+### User Management  
+- `GET /api/users/profile` - Get user profile
+- `PUT /api/users/profile` - Update user profile
+- `PUT /api/users/change-password` - Change password
+
+### Admin (Admin Role Required)
+- `GET /api/admin` - Get all users
+- `GET /api/admin/:id` - Get user by ID
+- `PUT /api/admin/:id` - Update user
+- `DELETE /api/admin/:id` - Delete user
+
+## Authentication Flow
+
+### Registration Process
+1. User submits registration details
+2. Server validates input and creates user account
+3. Verification email sent with 6-digit OTP
+4. User verifies email with OTP
+5. Account activated and JWT tokens issued
+
+### Login Process  
+1. User submits email/password
+2. Server validates credentials
+3. JWT access token (24h) + refresh token (7d) issued
+4. Client stores tokens securely
+
+### Token Refresh
+1. When access token expires, use refresh token
+2. Server validates refresh token
+3. New access token issued
+4. Refresh token rotated for security
+
+## Security Features
+
+- **Password Security** - bcrypt hashing with 12 rounds
+- **JWT Security** - Short-lived access tokens with refresh rotation  
+- **Rate Limiting** - 100 requests per 15 minutes per IP
+- **Input Validation** - Zod schema validation on all endpoints
+- **CORS Protection** - Configurable origin whitelist
+- **Security Headers** - Helmet.js for HTTP security
+- **Token Blacklisting** - Logout invalidates tokens immediately
+- **Email Verification** - Prevents unverified account access
+
+## Error Handling
+
+The API uses consistent error responses:
+
+```json
+{
+  "success": false,
+  "error": {
+    "message": "User-friendly error message",
+    "code": "ERROR_CODE",
+    "statusCode": 400,
+    "timestamp": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+Common error codes:
+- `VALIDATION_ERROR` - Input validation failed
+- `UNAUTHORIZED` - Authentication required
+- `FORBIDDEN` - Insufficient permissions
+- `NOT_FOUND` - Resource not found
+- `RATE_LIMITED` - Too many requests
+- `SERVER_ERROR` - Internal server error
+
+## Development
+
+### Running Tests
 
 ```bash
 # Run all tests
 npm test
 
-# Run tests in watch mode
+# Run tests in watch mode  
 npm run test:watch
 
-# Run tests with coverage
+# Generate coverage report
 npm run test:coverage
 ```
 
-## 🚀 Deployment
+### Code Quality
 
-### Docker
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist ./dist
-EXPOSE 3000
-CMD ["node", "dist/index.js"]
+```bash
+# Type checking
+npm run type-check
+
+# Linting
+npm run lint
+npm run lint:fix
 ```
 
-### Environment Setup
-1. Set `NODE_ENV=production`
-2. Configure production database
-3. Set secure `JWT_SECRET`
-4. Configure appropriate `CORS_ORIGIN`
 
-## 🏗️ Architecture Decisions
 
-### Modular Design
-- **Separation of Concerns**: Each module has a single responsibility
-- **Dependency Injection**: Easy to test and swap implementations
-- **Configuration Management**: Centralized environment handling
 
-### Error Handling
-- **Custom Error Classes**: Structured error responses
-- **Async Error Handling**: Proper async/await error catching
-- **Logging**: Comprehensive error logging
+### Health Checks
 
-### Database Abstraction
-- **Multiple Database Support**: Easy to switch between databases
-- **Connection Management**: Proper connection pooling and cleanup
-- **Health Monitoring**: Database health checks
+The API includes comprehensive health monitoring:
 
-## 📚 Adding New Features
+- **Basic Health:** `GET /health` - Simple OK/ERROR status
+- **Detailed Health:** `GET /api/health` - System metrics and database status
+- **Kubernetes Probes:** `/api/health/ready` and `/api/health/live`
 
-### Adding a New Route
-1. Create route file in `src/routes/`
-2. Import and register in `src/routes/index.ts`
-3. Add middleware if needed
+Health check responses include:
+- Database connectivity status
+- Memory usage statistics  
+- System uptime
+- Environment information
 
-### Adding Database Models
-1. Create model files in `src/models/`
-2. Import in route handlers
-3. Add migrations if using PostgreSQL
-
-### Adding Middleware
-1. Create middleware in `src/middleware/`
-2. Register in `src/app.ts` or specific routes
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 License
+### Development Guidelines
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Follow TypeScript strict mode
+- Write tests for new functionality
+- Update documentation for API changes
+- Use conventional commit messages
+- Ensure all tests pass before submitting
 
-## 🙏 Acknowledgments
+## Performance & Monitoring
 
-- Express.js team for the excellent framework
-- TypeScript team for type safety
-- All the open-source contributors who made this possible
+- **Request Logging** - Morgan + custom request logger
+- **Error Tracking** - Comprehensive error logging
+- **Performance Metrics** - Response time monitoring
+- **Database Optimization** - Proper indexing on frequently queried fields
+- **Memory Management** - Graceful shutdown and cleanup
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support and questions:
+- **Live API:** [authflow.kuldeepdev.me](https://authflow.kuldeepdev.me)
+- **Documentation:** Check the API documentation below
+- **Issues:** Open an issue in the repository
+
+---
