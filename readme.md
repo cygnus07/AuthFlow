@@ -2,7 +2,8 @@
 
 A production-ready authentication API built with Node.js, Express, TypeScript, and MongoDB. Features comprehensive user management, JWT-based authentication, OAuth integration, and robust security measures.
 
-**🚀 Live API:** [authflow-api.kuldeepdev.me](https://authflow.kuldeepdev.me)
+**🚀 Live API:** [authflow.kuldeepdev.me](https://authflow.kuldeepdev.me)  
+**📚 API Documentation:** [authflow-docs.kuldeepdev.me](https://authflow-docs.kuldeepdev.me)
 
 ## Features
 
@@ -16,6 +17,7 @@ A production-ready authentication API built with Node.js, Express, TypeScript, a
 - **Health Monitoring** - Comprehensive system health checks
 - **TypeScript** - Full type safety and modern development
 - **Testing** - Jest test suite with authentication coverage
+- **Interactive Documentation** - Complete API docs with testing interface
 
 ## Tech Stack
 
@@ -149,15 +151,27 @@ src/
     └── userValidator.ts     # Input validation schemas
 ```
 
-## API Endpoints
+## API Documentation
 
-### Health Checks
+**📚 Complete API Reference:** [authflow-docs.kuldeepdev.me](https://authflow-docs.kuldeepdev.me)
+
+The interactive documentation includes:
+- **All Endpoints** - Complete API reference with examples
+- **Interactive Testing** - Test API calls directly from the browser
+- **Authentication Guide** - JWT implementation details
+- **Request/Response Examples** - Real JSON examples for every endpoint
+- **Error Handling** - Complete error codes and responses
+- **Rate Limiting** - Usage limits and best practices
+
+### Quick API Overview
+
+#### Health Checks
 - `GET /health` - Basic health status
 - `GET /api/health` - Detailed system health
 - `GET /api/health/ready` - Readiness probe
 - `GET /api/health/live` - Liveness probe
 
-### Authentication
+#### Authentication
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login  
 - `POST /api/auth/logout` - User logout
@@ -169,16 +183,18 @@ src/
 - `GET /api/auth/google` - Google OAuth login
 - `GET /api/auth/google/callback` - Google OAuth callback
 
-### User Management  
+#### User Management  
 - `GET /api/users/profile` - Get user profile
 - `PUT /api/users/profile` - Update user profile
 - `PUT /api/users/change-password` - Change password
 
-### Admin (Admin Role Required)
+#### Admin (Admin Role Required)
 - `GET /api/admin` - Get all users
 - `GET /api/admin/:id` - Get user by ID
 - `PUT /api/admin/:id` - Update user
 - `DELETE /api/admin/:id` - Delete user
+
+> 💡 **Tip:** Visit the [interactive documentation](https://authflow-docs.kuldeepdev.me) to test these endpoints directly!
 
 ## Authentication Flow
 
@@ -262,9 +278,6 @@ npm run lint
 npm run lint:fix
 ```
 
-
-
-
 ### Health Checks
 
 The API includes comprehensive health monitoring:
@@ -307,11 +320,22 @@ Health check responses include:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## Support & Resources
 
-For support and questions:
-- **Live API:** [authflow.kuldeepdev.me](https://authflow.kuldeepdev.me)
-- **Documentation:** Check the API documentation below
-- **Issues:** Open an issue in the repository
+### Documentation & Testing
+- **🚀 Live API:** [authflow.kuldeepdev.me](https://authflow.kuldeepdev.me)
+- **📚 Interactive Documentation:** [authflow-docs.kuldeepdev.me](https://authflow-docs.kuldeepdev.me)
+- **💚 Health Status:** [authflow.kuldeepdev.me/health](https://authflow.kuldeepdev.me/health)
+
+### Getting Help
+- **Issues:** Open an issue in the repository for bugs or feature requests
+- **Questions:** Check the [API documentation](https://authflow-docs.kuldeepdev.me) first
+- **Contact:** For direct support and inquiries
+
+### Quick Links
+- [Register a new account](https://authflow-docs.kuldeepdev.me#/Authentication/post_api_auth_register) 
+- [Login endpoint](https://authflow-docs.kuldeepdev.me#/Authentication/post_api_auth_login)
+- [API health status](https://authflow.kuldeepdev.me/health)
 
 ---
+
