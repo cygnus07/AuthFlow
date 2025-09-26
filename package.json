@@ -4,9 +4,9 @@
   "description": "JWT authentication API using Node.js, Express, and TypeScript",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node -r tsconfig-paths/register dist/index.js",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
     "type-check": "tsc --noEmit",
